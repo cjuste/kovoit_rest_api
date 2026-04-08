@@ -1,12 +1,12 @@
 package com.kovoit.restapi.service
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
-import org.springframework.test.context.junit4.SpringRunner
+import org.mockito.junit.jupiter.MockitoExtension
 
-@RunWith(SpringRunner::class)
+@ExtendWith(MockitoExtension::class)
 class TravelerServiceTest {
 
     @InjectMocks
@@ -14,7 +14,7 @@ class TravelerServiceTest {
 
     @Test
     fun testGetTravelers() {
-        var travelers = travelerService.getTravelers()
+        val travelers = travelerService.getTravelers()
 
         assertThat(travelers).hasSize(1)
     }

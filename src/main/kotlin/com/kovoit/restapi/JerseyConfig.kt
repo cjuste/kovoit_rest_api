@@ -8,6 +8,6 @@ import org.springframework.stereotype.Component
 class JerseyConfig() : ResourceConfig() {
 
     init {
-        register(TravelerApi())
+        register(TravelerApi::class.java)
     }
 }
