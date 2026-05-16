@@ -18,6 +18,54 @@ services:
       - nominatim-flatnode:/nominatim/flatnode
       - ./data:/data:ro
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.4
+    container_name: elasticsearch-kovoit
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -qE '\"status\":\"(green|yellow)\"'"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  elasticsearch-setup:
+    image: curlimages/curl:latest
+    restart: on-failure
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    command: >
+      curl -X PUT "http://elasticsearch:9200/travelers"
+      -H "Content-Type: application/json"
+      -d '{
+        "mappings": {
+          "properties": {
+            "personalInfo": {
+              "properties": {
+                "firstName":  { "type": "text" },
+                "lastName":   { "type": "text" },
+                "email":      { "type": "text" },
+                "address": {
+                  "properties": {
+                    "fullAddress": { "type": "text" },
+                    "location":    { "type": "geo_point" }
+                  }
+                }
+              }
+            },
+            "isDriver": { "type": "boolean" }
+          }
+        }
+      }'
+
 volumes:
   nominatim-data:
   nominatim-flatnode:
+  elasticsearch-data:

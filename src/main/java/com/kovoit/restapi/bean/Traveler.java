@@ -1,8 +1,8 @@
 package com.kovoit.restapi.bean;
 
-public record Traveler(PersonalInfo personalInfo, Car car) {
+public record Traveler(PersonalInfo personalInfo, boolean isDriver) {
 
     public Traveler(PersonalInfo personalInfo) {
-        this(personalInfo, null);
+        this(personalInfo, false);
     }
 }
