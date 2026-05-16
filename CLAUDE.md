@@ -13,23 +13,23 @@ mvn test -Dtest=TravelerServiceTest  # Run a single test class
 
 ## Architecture
 
-Spring Boot REST API written in Kotlin using Jersey (JAX-RS) for routing.
+Spring Boot REST API written in Java using Jersey (JAX-RS) for routing.
 
 **Request flow:** `TravelerApi` (JAX-RS resource) → `TravelerService` (business logic) → response
 
 **Key structural decisions:**
-- Jersey is registered via `JerseyConfig.kt` — new API resources must be registered there with `register(MyApi::class.java)`
-- API resources live in `src/main/kotlin/com/kovoit/restapi/api/`
-- Data models (beans) live in `src/main/kotlin/com/kovoit/restapi/bean/`
-- Services live in `src/main/kotlin/com/kovoit/restapi/service/`
+- Jersey is registered via `JerseyConfig.java` — new API resources must be registered there with `register(MyApi.class)`
+- API resources live in `src/main/java/com/kovoit/restapi/api/`
+- Data models (beans) live in `src/main/java/com/kovoit/restapi/bean/` — implemented as Java Records
+- Services live in `src/main/java/com/kovoit/restapi/service/`
 
 **Current endpoints:**
 - `GET /traveler/` — returns a list of `Traveler` objects as JSON
 
 ## Tech Stack
 
-- Kotlin 1.2.71 / Java 8
-- Spring Boot 2.1.1
+- Java 25 (Temurin 25.0.3)
+- Spring Boot 4.0.5
 - Jersey/JAX-RS for REST routing
-- Jackson Kotlin module for JSON serialization
-- Mockito-Kotlin + AssertJ for testing
+- Jackson for JSON serialization (Records supported natively)
+- Mockito + AssertJ for testing

@@ -1,0 +1,23 @@
+services:
+  nominatim:
+    image: mediagis/nominatim:5.3
+    container_name: nominatim_france
+    shm_size: '4gb'
+    #restart: always
+    ports:
+      - "7990:8080"
+    environment:
+      # Paramètres pour l'import initial
+      - PBF_PATH=/data/france-260410.osm.pbf
+      - THREADS=2
+    volumes:
+      # Ce volume stocke la base de données.
+      # S'il est plein, Nominatim ignorera l'importation au prochain redémarrage.
+      - nominatim-data:/var/lib/postgresql/16/main
+      # Pour stocker les fichiers d'indexation
+      - nominatim-flatnode:/nominatim/flatnode
+      - ./data:/data:ro
+
+volumes:
+  nominatim-data:
+  nominatim-flatnode:
