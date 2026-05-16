@@ -19,7 +19,7 @@ services:
       - ./data:/data:ro
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.4
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.4.1
     container_name: elasticsearch-kovoit
     ports:
       - "9200:9200"
@@ -47,17 +47,13 @@ services:
       -d '{
         "mappings": {
           "properties": {
-            "personalInfo": {
+            "firstName":   { "type": "text" },
+            "lastName":    { "type": "text" },
+            "email":       { "type": "text" },
+            "address": {
               "properties": {
-                "firstName":  { "type": "text" },
-                "lastName":   { "type": "text" },
-                "email":      { "type": "text" },
-                "address": {
-                  "properties": {
-                    "fullAddress": { "type": "text" },
-                    "location":    { "type": "geo_point" }
-                  }
-                }
+                "fullAddress": { "type": "text" },
+                "location":    { "type": "geo_point" }
               }
             },
             "isDriver": { "type": "boolean" }
