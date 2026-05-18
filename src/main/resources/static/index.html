@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Import Employés</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #333; }
+    .upload-area { border: 2px dashed #ccc; border-radius: 8px; padding: 2rem; text-align: center; margin: 1.5rem 0; }
+    .upload-area input[type="file"] { display: block; margin: 0.5rem auto; }
+    button { background: #2563eb; color: white; border: none; padding: 0.6rem 1.4rem; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+    button:disabled { background: #93c5fd; cursor: not-allowed; }
+    button:hover:not(:disabled) { background: #1d4ed8; }
+    #status { margin: 1rem 0; font-weight: bold; }
+    .error { color: #dc2626; }
+    .success { color: #16a34a; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.6rem 0.8rem; border-bottom: 2px solid #e2e8f0; }
+    td { padding: 0.6rem 0.8rem; border-bottom: 1px solid #e2e8f0; }
+    tr:hover td { background: #f8fafc; }
+    .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+    .badge-yes { background: #dcfce7; color: #166534; }
+    .badge-no  { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <h1>Import Employés CSV</h1>
+  <p>Format attendu : <code>Prénom;Nom;Email;Adresse;Conducteur;</code></p>
+
+  <div class="upload-area">
+    <label for="csvFile">Sélectionnez un fichier CSV</label>
+    <input type="file" id="csvFile" accept=".csv">
+    <button id="importBtn" onclick="importCsv()" disabled>Importer</button>
+  </div>
+
+  <div id="status"></div>
+  <div id="results"></div>
+
+  <script>
+    document.getElementById('csvFile').addEventListener('change', function () {
+      document.getElementById('importBtn').disabled = !this.files.length;
+    });
+
+    async function importCsv() {
+      const fileInput = document.getElementById('csvFile');
+      const statusEl = document.getElementById('status');
+      const resultsEl = document.getElementById('results');
+      const btn = document.getElementById('importBtn');
+
+      if (!fileInput.files.length) return;
+
+      btn.disabled = true;
+      statusEl.className = '';
+      statusEl.textContent = 'Import en cours…';
+      resultsEl.innerHTML = '';
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      try {
+        const resp = await fetch('/api/traveler/import-csv', { method: 'POST', body: formData });
+        if (!resp.ok) throw new Error(`Erreur serveur : ${resp.status}`);
+        const travelers = await resp.json();
+
+        statusEl.className = 'success';
+        statusEl.textContent = `${travelers.length} employé(s) importé(s) avec succès.`;
+        resultsEl.innerHTML = renderTable(travelers);
+      } catch (err) {
+        statusEl.className = 'error';
+        statusEl.textContent = err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function renderTable(travelers) {
+      if (!travelers.length) return '<p>Aucun employé importé.</p>';
+      const rows = travelers.map(t => {
+        const info = t.personalInfo;
+        const addr = info.address;
+        const addrText = addr ? `${addr.fullAddress} (${addr.lat.toFixed(4)}, ${addr.lon.toFixed(4)})` : '—';
+        const driver = t.isDriver
+          ? '<span class="badge badge-yes">Oui</span>'
+          : '<span class="badge badge-no">Non</span>';
+        return `<tr>
+          <td>${esc(info.firstName)}</td>
+          <td>${esc(info.lastName)}</td>
+          <td>${esc(info.email)}</td>
+          <td>${esc(addrText)}</td>
+          <td>${driver}</td>
+        </tr>`;
+      }).join('');
+      return `<table>
+        <thead><tr><th>Prénom</th><th>Nom</th><th>Email</th><th>Adresse</th><th>Conducteur</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    }
+
+    function esc(str) {
+      return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  </script>
+</body>
+</html>

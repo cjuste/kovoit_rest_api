@@ -16,6 +16,36 @@
       }
     },
     {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPath": "/search",
+        "queryParameters": {
+          "q": { "equalTo": "5 rue du Patis Patelin, 35200 Rennes" }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "bodyFileName": "nominatim-rennes-patis.json"
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPath": "/search",
+        "queryParameters": {
+          "q": { "equalTo": "2 rue de la Mabilais, 35000 Rennes" }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "bodyFileName": "nominatim-rennes-mabilais.json"
+      }
+    },
+    {
       "priority": 5,
       "request": {
         "method": "GET",

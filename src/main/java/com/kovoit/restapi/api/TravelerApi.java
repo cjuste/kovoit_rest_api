@@ -9,8 +9,10 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.springframework.stereotype.Component;
 
+import java.io.InputStream;
 import java.util.List;
 
 @Path("/traveler")
@@ -36,5 +38,13 @@ public class TravelerApi {
     public Response saveTraveler(Traveler traveler) {
         Traveler saved = travelerService.saveTraveler(traveler);
         return Response.status(Response.Status.CREATED).entity(saved).build();
+    }
+
+    @POST
+    @Path("/import-csv")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response importCsv(@FormDataParam("file") InputStream fileInputStream) {
+        List<Traveler> imported = travelerService.importFromCsv(fileInputStream);
+        return Response.ok(imported).build();
     }
 }

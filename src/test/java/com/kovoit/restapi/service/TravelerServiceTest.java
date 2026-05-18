@@ -14,10 +14,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -26,6 +30,9 @@ class TravelerServiceTest {
 
     @Mock
     private TravelerRepository travelerRepository;
+
+    @Mock
+    private GeocodingService geocodingService;
 
     @InjectMocks
     private TravelerService travelerService;
@@ -101,5 +108,58 @@ class TravelerServiceTest {
         ArgumentCaptor<TravelerDocument> captor = ArgumentCaptor.forClass(TravelerDocument.class);
         verify(travelerRepository).save(captor.capture());
         assertThat(captor.getValue().getAddress()).isNull();
+    }
+
+    @Test
+    void importFromCsv_parsesAllRows() {
+        String csv = """
+            Prénom;Nom;Email;Adresse;Conducteur;
+            Clément;Juste;cj@test.fr;Paris, France;Oui;
+            Toto;Durand;td@test.fr;Lyon, France;Non;
+            """;
+        InputStream input = new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
+        when(geocodingService.geocode("Paris, France")).thenReturn(new Address("Paris, France", 48.85, 2.35));
+        when(geocodingService.geocode("Lyon, France")).thenReturn(new Address("Lyon, France", 45.75, 4.83));
+        when(travelerRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        List<Traveler> result = travelerService.importFromCsv(input);
+
+        assertThat(result).hasSize(2);
+        verify(travelerRepository, times(2)).save(any());
+    }
+
+    @Test
+    void importFromCsv_setsDriverFlag() {
+        String csv = """
+            Prénom;Nom;Email;Adresse;Conducteur;
+            Alice;Dupont;alice@test.fr;Paris, France;Oui;
+            Bob;Martin;bob@test.fr;Lyon, France;Non;
+            """;
+        InputStream input = new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
+        when(geocodingService.geocode(any())).thenReturn(new Address("any", 0, 0));
+        when(travelerRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        List<Traveler> result = travelerService.importFromCsv(input);
+
+        assertThat(result.get(0).isDriver()).isTrue();
+        assertThat(result.get(1).isDriver()).isFalse();
+    }
+
+    @Test
+    void importFromCsv_skipsRowOnGeocodingFailure() {
+        String csv = """
+            Prénom;Nom;Email;Adresse;Conducteur;
+            Alice;Dupont;alice@test.fr;adresse valide;Non;
+            Bob;Martin;bob@test.fr;adresse invalide;Non;
+            """;
+        InputStream input = new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
+        when(geocodingService.geocode("adresse valide")).thenReturn(new Address("adresse valide", 1, 1));
+        when(geocodingService.geocode("adresse invalide")).thenThrow(new IllegalArgumentException("not found"));
+        when(travelerRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        List<Traveler> result = travelerService.importFromCsv(input);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().personalInfo().firstName()).isEqualTo("Alice");
     }
 }

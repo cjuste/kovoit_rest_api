@@ -46,3 +46,6 @@ Spring Boot REST API written in Java using Jersey (JAX-RS) for routing.
 - When I ask for a feature, write tests first
 - Tests should FAIL initially (no implementation exists)
 - Only after tests are written, implement minimal code to pass
+- Implement integration tests after unit tests are passing
+- Refactor only after tests are passing
+- Tests should still pass after refactoring
