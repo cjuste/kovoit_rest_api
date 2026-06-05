@@ -36,16 +36,8 @@ Spring Boot REST API written in Java using Jersey (JAX-RS) for routing.
 
 ## Testing Conventions
 
-### TDD Workflow
-- Always write failing tests BEFORE implementation
-- Use AAA pattern: Arrange-Act-Assert
-- One assertion per test when possible
-- Test names describe behavior: "should_return_empty_when_no_items"
+Implementations must follow the TDD skill — unit tests first, then implementation, then integration tests.
 
-### Test-First Rules
-- When I ask for a feature, write tests first
-- Tests should FAIL initially (no implementation exists)
-- Only after tests are written, implement minimal code to pass
-- Implement integration tests after unit tests are passing
-- Refactor only after tests are passing
-- Tests should still pass after refactoring
+**A feature is not done until integration tests are written and passing.**
+
+Integration test pattern: `@SpringBootTest(RANDOM_PORT)` + Testcontainers (Elasticsearch) + WireMock (Nominatim). See `TravelerIntegrationTest` as the reference.Peux 
