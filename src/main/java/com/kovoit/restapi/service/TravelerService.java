@@ -1,6 +1,7 @@
 package com.kovoit.restapi.service;
 
 import com.kovoit.restapi.bean.Address;
+import com.kovoit.restapi.bean.Company;
 import com.kovoit.restapi.bean.PersonalInfo;
 import com.kovoit.restapi.bean.Traveler;
 import com.kovoit.restapi.document.AddressDocument;
@@ -26,10 +27,13 @@ public class TravelerService {
 
     private final TravelerRepository travelerRepository;
     private final GeocodingService geocodingService;
+    private final CompanyService companyService;
 
-    public TravelerService(TravelerRepository travelerRepository, GeocodingService geocodingService) {
+    public TravelerService(TravelerRepository travelerRepository, GeocodingService geocodingService,
+                            CompanyService companyService) {
         this.travelerRepository = travelerRepository;
         this.geocodingService = geocodingService;
+        this.companyService = companyService;
     }
 
     public List<Traveler> getTravelers() {
@@ -38,12 +42,25 @@ public class TravelerService {
                 .toList();
     }
 
+    public List<Traveler> findByCompanyId(String companyId) {
+        List<TravelerDocument> docs = travelerRepository.findByCompanyId(companyId);
+        if (docs.isEmpty()) {
+            return List.of();
+        }
+        Company company = companyService.getCompanyById(companyId).orElse(null);
+        return docs.stream()
+                .map(doc -> fromDocument(doc, company))
+                .toList();
+    }
+
     public Traveler saveTraveler(Traveler traveler) {
         travelerRepository.save(toDocument(traveler));
         return traveler;
     }
 
-    public List<Traveler> importFromCsv(InputStream csv) {
+    public List<Traveler> importFromCsv(InputStream csv, String companyId) {
+        Company company = companyService.getCompanyById(companyId)
+                .orElseThrow(() -> new IllegalArgumentException("Société introuvable : " + companyId));
         List<Traveler> imported = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(csv, StandardCharsets.UTF_8))) {
             reader.readLine(); // skip header
@@ -59,7 +76,7 @@ public class TravelerService {
                 boolean isDriver  = "oui".equalsIgnoreCase(cols[4].trim());
                 try {
                     Address address = geocodingService.geocode(rawAddress);
-                    Traveler traveler = new Traveler(new PersonalInfo(firstName, lastName, email, address), isDriver);
+                    Traveler traveler = new Traveler(new PersonalInfo(firstName, lastName, email, address), isDriver, company);
                     saveTraveler(traveler);
                     imported.add(traveler);
                 } catch (IllegalArgumentException e) {
@@ -73,6 +90,13 @@ public class TravelerService {
     }
 
     private Traveler fromDocument(TravelerDocument doc) {
+        Company company = doc.getCompanyId() == null
+                ? null
+                : companyService.getCompanyById(doc.getCompanyId()).orElse(null);
+        return fromDocument(doc, company);
+    }
+
+    private Traveler fromDocument(TravelerDocument doc, Company company) {
         Address address = null;
         if (doc.getAddress() != null) {
             address = new Address(
@@ -81,7 +105,7 @@ public class TravelerService {
                 doc.getAddress().location().getLon()
             );
         }
-        return new Traveler(new PersonalInfo(doc.getFirstName(), doc.getLastName(), doc.getEmail(), address), doc.isDriver());
+        return new Traveler(new PersonalInfo(doc.getFirstName(), doc.getLastName(), doc.getEmail(), address), doc.isDriver(), company);
     }
 
     private TravelerDocument toDocument(Traveler traveler) {
@@ -93,6 +117,7 @@ public class TravelerService {
                 new GeoPoint(info.address().lat(), info.address().lon())
             );
         }
-        return new TravelerDocument(info.firstName(), info.lastName(), info.email(), addressDoc, traveler.isDriver());
+        String companyId = traveler.company() == null ? null : traveler.company().id();
+        return new TravelerDocument(info.firstName(), info.lastName(), info.email(), addressDoc, traveler.isDriver(), companyId);
     }
 }

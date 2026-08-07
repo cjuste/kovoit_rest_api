@@ -1,0 +1,32 @@
+{
+  "mappings": [
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPath": "/reverse",
+        "queryParameters": {
+          "lat": { "equalTo": "48.856600" },
+          "lon": { "equalTo": "2.352200" }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "bodyFileName": "nominatim-reverse-paris.json"
+      }
+    },
+    {
+      "priority": 5,
+      "request": {
+        "method": "GET",
+        "urlPath": "/reverse"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "bodyFileName": "nominatim-reverse-not-found.json"
+      }
+    }
+  ]
+}

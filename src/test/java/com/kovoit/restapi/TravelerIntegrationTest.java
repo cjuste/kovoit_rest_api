@@ -4,7 +4,11 @@ import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.kovoit.restapi.bean.Address;
 import com.kovoit.restapi.bean.PersonalInfo;
 import com.kovoit.restapi.bean.Traveler;
+import com.kovoit.restapi.document.AddressDocument;
+import com.kovoit.restapi.document.CompanyDocument;
+import com.kovoit.restapi.repository.CompanyRepository;
 import com.kovoit.restapi.repository.TravelerRepository;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -76,12 +80,20 @@ class TravelerIntegrationTest {
     @Autowired
     TravelerRepository travelerRepository;
 
+    @Autowired
+    CompanyRepository companyRepository;
+
     RestTemplate restTemplate;
+    String companyId;
 
     @BeforeEach
     void setUp() {
         restTemplate = new RestTemplate();
         travelerRepository.deleteAll();
+        companyRepository.deleteAll();
+        CompanyDocument company = companyRepository.save(new CompanyDocument("Acme",
+                new AddressDocument("Nantes", new GeoPoint(47.2, -1.5))));
+        companyId = company.getId();
     }
 
     @Test
@@ -151,6 +163,7 @@ class TravelerIntegrationTest {
             @Override
             public String getFilename() { return "employees.csv"; }
         });
+        body.add("companyId", companyId);
         return restTemplate.exchange(
                 "http://localhost:" + port + "/api/traveler/import-csv",
                 HttpMethod.POST,

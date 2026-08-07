@@ -25,12 +25,17 @@ public class TravelerDocument {
     @Field(type = FieldType.Boolean)
     private final boolean isDriver;
 
-    public TravelerDocument(String firstName, String lastName, String email, AddressDocument address, boolean isDriver) {
+    @Field(type = FieldType.Keyword)
+    private final String companyId;
+
+    public TravelerDocument(String firstName, String lastName, String email, AddressDocument address,
+                             boolean isDriver, String companyId) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.address = address;
         this.isDriver = isDriver;
+        this.companyId = companyId;
     }
 
     public String getFirstName() { return firstName; }
@@ -42,4 +47,6 @@ public class TravelerDocument {
     public AddressDocument getAddress() { return address; }
 
     public boolean isDriver() { return isDriver; }
+
+    public String getCompanyId() { return companyId; }
 }

@@ -56,10 +56,55 @@ services:
                 "location":    { "type": "geo_point" }
               }
             },
-            "isDriver": { "type": "boolean" }
+            "isDriver": { "type": "boolean" },
+            "companyId": { "type": "keyword" }
           }
         }
       }'
+
+  # Pré-traitement OSRM (extract -> partition -> customize) à partir du même extract
+  # que Nominatim. Attention : traite la France entière, potentiellement long/gourmand
+  # en mémoire en local ; relancer "docker compose up" ré-exécute ce pré-traitement
+  # (pas de cache/idempotence gérée ici). Envisager un extract plus petit pour le dev.
+  osrm-extract:
+    image: osrm/osrm-backend:v5.25.0
+    platform: linux/amd64
+    volumes:
+      - ./data:/data
+    command: sh -c "test -f /data/france-260410.osrm || osrm-extract -t 2 -p /opt/car.lua /data/france-260410.osm.pbf"
+
+  osrm-partition:
+    image: osrm/osrm-backend:v5.25.0
+    platform: linux/amd64
+    depends_on:
+      osrm-extract:
+        condition: service_completed_successfully
+    volumes:
+      - ./data:/data
+    command: sh -c "test -f /data/france-260410.osrm.partition || osrm-partition /data/france-260410.osrm"
+
+  osrm-customize:
+    image: osrm/osrm-backend:v5.25.0
+    platform: linux/amd64
+    depends_on:
+      osrm-partition:
+        condition: service_completed_successfully
+    volumes:
+      - ./data:/data
+    command: sh -c "test -f /data/france-260410.osrm.mldgr || osrm-customize /data/france-260410.osrm"
+
+  osrm-routed:
+    image: osrm/osrm-backend:v5.25.0
+    platform: linux/amd64
+    container_name: osrm_france
+    depends_on:
+      osrm-customize:
+        condition: service_completed_successfully
+    ports:
+      - "5050:5000"
+    volumes:
+      - ./data:/data
+    command: osrm-routed --algorithm mld /data/france-260410.osrm
 
 volumes:
   nominatim-data:

@@ -1,6 +1,8 @@
 package com.kovoit.restapi.api;
 
+import com.kovoit.restapi.bean.PassengerMatch;
 import com.kovoit.restapi.bean.Traveler;
+import com.kovoit.restapi.service.PassengerMatchingService;
 import com.kovoit.restapi.service.TravelerService;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -22,9 +24,11 @@ import java.util.List;
 public class TravelerApi {
 
     private final TravelerService travelerService;
+    private final PassengerMatchingService passengerMatchingService;
 
-    public TravelerApi(TravelerService travelerService) {
+    public TravelerApi(TravelerService travelerService, PassengerMatchingService passengerMatchingService) {
         this.travelerService = travelerService;
+        this.passengerMatchingService = passengerMatchingService;
     }
 
     @GET
@@ -43,8 +47,16 @@ public class TravelerApi {
     @POST
     @Path("/import-csv")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response importCsv(@FormDataParam("file") InputStream fileInputStream) {
-        List<Traveler> imported = travelerService.importFromCsv(fileInputStream);
+    public Response importCsv(@FormDataParam("file") InputStream fileInputStream,
+                               @FormDataParam("companyId") String companyId) {
+        List<Traveler> imported = travelerService.importFromCsv(fileInputStream, companyId);
         return Response.ok(imported).build();
+    }
+
+    @POST
+    @Path("/passagers")
+    public Response findPassengers(Traveler conducteur) {
+        List<PassengerMatch> matches = passengerMatchingService.findPassengers(conducteur);
+        return Response.ok(matches).build();
     }
 }

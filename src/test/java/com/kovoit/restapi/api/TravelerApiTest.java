@@ -1,8 +1,10 @@
 package com.kovoit.restapi.api;
 
 import com.kovoit.restapi.bean.Address;
+import com.kovoit.restapi.bean.PassengerMatch;
 import com.kovoit.restapi.bean.PersonalInfo;
 import com.kovoit.restapi.bean.Traveler;
+import com.kovoit.restapi.service.PassengerMatchingService;
 import com.kovoit.restapi.service.TravelerService;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -26,6 +29,9 @@ class TravelerApiTest {
 
   @Mock
   private TravelerService travelerService;
+
+  @Mock
+  private PassengerMatchingService passengerMatchingService;
 
   @InjectMocks
   private TravelerApi travelerApi;
@@ -58,12 +64,27 @@ class TravelerApiTest {
     Traveler traveler = new Traveler(
             new PersonalInfo("Clément", "Juste", "cj@test.fr", new Address("Paris", 48.85, 2.35)), true);
     InputStream csvStream = new ByteArrayInputStream("dummy".getBytes(StandardCharsets.UTF_8));
-    when(travelerService.importFromCsv(any())).thenReturn(List.of(traveler));
+    when(travelerService.importFromCsv(any(), eq("company-1"))).thenReturn(List.of(traveler));
 
-    try (Response response = travelerApi.importCsv(csvStream)) {
+    try (Response response = travelerApi.importCsv(csvStream, "company-1")) {
       assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
       assertThat(response.getEntity()).isEqualTo(List.of(traveler));
-      verify(travelerService).importFromCsv(any());
+      verify(travelerService).importFromCsv(any(), eq("company-1"));
+    }
+  }
+
+  @Test
+  void findPassengers_returns200WithMatchList() {
+    Traveler conducteur = new Traveler(new PersonalInfo("Alice", "Dupont", "alice@example.com", null));
+    PassengerMatch match = new PassengerMatch(
+            new Traveler(new PersonalInfo("Bob", "Martin", "bob@example.com", null)),
+            new Address("Arrêt", 48.05, 2.0));
+    when(passengerMatchingService.findPassengers(conducteur)).thenReturn(List.of(match));
+
+    try (Response response = travelerApi.findPassengers(conducteur)) {
+      assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+      assertThat(response.getEntity()).isEqualTo(List.of(match));
+      verify(passengerMatchingService).findPassengers(conducteur);
     }
   }
 }

@@ -1,0 +1,28 @@
+{
+  "mappings": [
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPath": "/route/v1/driving/2.352000,48.857000;2.352200,48.856600"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "bodyFileName": "osrm-integration-leg.json"
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPath": "/route/v1/driving/2.352200,48.856600;2.352200,48.856600;-1.553600,47.218400"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "bodyFileName": "osrm-integration-multi.json"
+      }
+    }
+  ]
+}

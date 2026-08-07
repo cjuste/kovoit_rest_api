@@ -23,7 +23,7 @@ class GeocodingServiceTest {
 
     @BeforeEach
     void setUp() {
-        geocodingService = new GeocodingService(wm.getRuntimeInfo().getHttpBaseUrl());
+        geocodingService = new GeocodingService(wm.getRuntimeInfo().getHttpBaseUrl(), 3000, 5000);
     }
 
     @Test
@@ -40,5 +40,20 @@ class GeocodingServiceTest {
         assertThatThrownBy(() -> geocodingService.geocode("adresse introuvable"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("adresse introuvable");
+    }
+
+    @Test
+    void reverseGeocode_returnsAddressWithDisplayNameAndOriginalCoordinates() {
+        Address address = geocodingService.reverseGeocode(48.8566, 2.3522);
+
+        assertThat(address.fullAddress()).isEqualTo("Paris, Île-de-France, France");
+        assertThat(address.lat()).isEqualTo(48.8566);
+        assertThat(address.lon()).isEqualTo(2.3522);
+    }
+
+    @Test
+    void reverseGeocode_throwsWhenNoResult() {
+        assertThatThrownBy(() -> geocodingService.reverseGeocode(0.0, 0.0))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

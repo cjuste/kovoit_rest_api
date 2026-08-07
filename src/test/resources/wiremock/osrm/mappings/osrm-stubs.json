@@ -1,0 +1,40 @@
+{
+  "mappings": [
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPath": "/route/v1/driving/2.352200,48.856600;-1.553600,47.218400"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "bodyFileName": "osrm-route-paris-nantes.json"
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPath": "/route/v1/driving/2.352200,48.856600;2.340000,48.860000;-1.553600,47.218400"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "bodyFileName": "osrm-route-abc.json"
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPath": "/route/v1/driving/0.000000,0.000000;0.001000,0.001000"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "bodyFileName": "osrm-no-route.json"
+      }
+    }
+  ]
+}
